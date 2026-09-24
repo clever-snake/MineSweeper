@@ -25,7 +25,7 @@ public class Board {
         }
     }
     
-    public void printBoard(){
+    public void printDebug(){
         for(int i=0; i<rows; i++){
             for(int j=0; j<columns; j++){
                 if(grid[i][j].hasMine()){
@@ -76,4 +76,39 @@ public class Board {
             }
         }
     }
+
+    public void printBoard(){
+        for(int i=0; i<rows; i++){
+            for(int j=0; j<columns; j++){
+                if(grid[i][j].isFlagged()){ 
+                    System.out.print("F "); continue;
+                }else if(!grid[i][j].isReavealed()) {
+                    System.out.print("# "); continue;
+                }else if(grid[i][j].hasMine() && grid[i][j].isReavealed()){ 
+                    System.out.print("* "); continue;
+                }else if(grid[i][j].getAdjacentMines()==0) {
+                    System.out.print(". "); continue;
+                }else System.out.print(grid[i][j].getAdjacentMines()+ " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public boolean reveal(int r, int c){
+        if(!isInBounds(r, c) || grid[r][c].isReavealed() || grid[r][c].isFlagged()){ 
+            return false;
+        }
+        grid[r][c].setReavealed(true);
+        if(grid[r][c].hasMine()) return true;
+        if(grid[r][c].getAdjacentMines() ==0){
+            for(int dr=-1; dr<2; dr++){
+            for(int dc=-1; dc<2; dc++){
+                if(dr==0 && dc ==0) continue;
+                reveal(r + dr, c + dc);
+            }
+        }
+        }
+        return false;
+    }
+
 }
