@@ -111,4 +111,30 @@ public class Board {
         return false;
     }
 
+    public void toggleFlag(int r, int c){
+        if(!isInBounds(r, c) || grid[r][c].isReavealed()){
+            return;
+        }
+        grid[r][c].setFlagged(!grid[r][c].isFlagged());;
+    }
+
+    public boolean isWon(){
+        for(int i=0; i<rows; i++){
+            for(int j=0; j<columns; j++){
+                if(!grid[i][j].isReavealed()) return false;
+            }
+        }
+        return true;
+    }
+
+    public void revealAllMines(){
+        for(int i=0; i<rows; i++){
+            for(int j=0; j<columns; j++){
+                if(grid[i][j].hasMine()){
+                    grid[i][j].setFlagged(false);
+                    grid[i][j].setReavealed(true);
+                }
+            }
+        }
+    }
 }
