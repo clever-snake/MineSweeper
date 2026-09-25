@@ -5,16 +5,16 @@ public class Board {
     private int rows;
     private int columns;
     private int mineCount;
+    private boolean minesPlaced;
     private Cell[][] grid;
     
     public Board(int rows,int columns,int mineCount){
         this.rows = rows;
         this.columns = columns;
         this.mineCount = mineCount;
+        minesPlaced = false;
         grid = new Cell[rows][columns];
         fillGrid();
-        placeMines();
-        calculateAdjacentMines();
     }
 
     private void fillGrid(){
@@ -42,12 +42,13 @@ public class Board {
         }
     }
 
-    private void placeMines(){
+    private void placeMines(int safeR, int safeC){
         int placed = 0;
         while(placed<mineCount){
             Random rand = new Random();
             int rrow = rand.nextInt(rows);
             int rcolumn = rand.nextInt(columns);
+            if (Math.abs(rrow - safeR) <= 1 && Math.abs(rcolumn - safeC) <= 1) continue;
             if(!grid[rrow][rcolumn].hasMine()) {grid[rrow][rcolumn].setHasMine(true); placed++;}
         }
     }
@@ -95,6 +96,11 @@ public class Board {
     }
 
     public boolean reveal(int r, int c){
+        if(!minesPlaced){
+            placeMines(r, c);
+            calculateAdjacentMines();
+            minesPlaced = true;
+        }
         if(!isInBounds(r, c) || grid[r][c].isReavealed() || grid[r][c].isFlagged()){ 
             return false;
         }
@@ -121,7 +127,7 @@ public class Board {
     public boolean isWon(){
         for(int i=0; i<rows; i++){
             for(int j=0; j<columns; j++){
-                if(!grid[i][j].isReavealed()) return false;
+                if(!grid[i][j].isReavealed()&& !grid[i][j].hasMine()) return false;
             }
         }
         return true;
@@ -138,6 +144,18 @@ public class Board {
         }
     }
 
+    public int getFlagCount(){
+        int count=0;
+        for(int i=0; i<rows; i++){
+            for(int j=0; j<columns; j++){
+                if(grid[i][j].isFlagged()) count++;
+            }
+        }
+        return count;
+    }
+
+    public int getMineCount(){return mineCount;}
+
     public int getRows() {return rows;}
 
     public int getColumns() {return columns;}
@@ -145,4 +163,5 @@ public class Board {
     public Cell getCell(int r, int c){
         return grid[r][c];
     }
+
 }

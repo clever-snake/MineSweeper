@@ -6,13 +6,27 @@ public class MineSweeperGUI extends Frame{
     private Board board;
     private Button[][] buttons;
     private Label statusLabel;
+    private Label minesLabel;
+    private int rows;
+    private int columns;
+    private int mines;
     private boolean gameOver = false;
 
     public MineSweeperGUI(int rows, int columns, int mines){
+        this.rows = 9;
+        this.columns = 9;
+        this.mines =10;
+
         board = new Board(rows, columns, mines);
         setTitle("Minesweeper");
         statusLabel = new Label("Good Luck.");
-        add(statusLabel,BorderLayout.NORTH);
+        Panel topPanel = new Panel(new FlowLayout());
+        minesLabel = new Label("Mines: " + mines);
+        Button newGameButton= new Button("New Game");
+        topPanel.add(minesLabel);
+        topPanel.add(newGameButton);
+        topPanel.add(statusLabel);
+        add(topPanel, BorderLayout.NORTH);
         Panel gridPanel = new Panel(new GridLayout(rows,columns));
         buttons = new Button[rows][columns];
 
@@ -33,6 +47,12 @@ public class MineSweeperGUI extends Frame{
         
 
         add(gridPanel,BorderLayout.CENTER);
+
+        newGameButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e){
+                newGame();
+            }
+        });
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e){
@@ -83,5 +103,19 @@ public class MineSweeperGUI extends Frame{
                 }
             }
         }
+        minesLabel.setText("Mines: "+ (board.getMineCount()-board.getFlagCount()));
+    }
+    
+    private void newGame(){
+        board = new Board(rows, columns, mines);
+        gameOver = false;
+        statusLabel.setText("Good Luck!");
+        for(int i=0; i<rows; i++){
+            for(int j=0; j<columns; j++){
+                buttons[i][j].setLabel("");
+                buttons[i][j].setEnabled(true);
+            }
+        }
+        updateButtons();
     }
 }
