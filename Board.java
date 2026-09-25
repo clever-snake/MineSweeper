@@ -137,4 +137,12 @@ public class Board {
             }
         }
     }
+
+    public int getRows() {return rows;}
+
+    public int getColumns() {return columns;}
+
+    public Cell getCell(int r, int c){
+        return grid[r][c];
+    }
 }
