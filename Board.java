@@ -144,6 +144,16 @@ public class Board {
         }
     }
 
+    public void flagAllMines(){
+    for(int i=0; i<rows; i++){
+        for(int j=0; j<columns; j++){
+            if(grid[i][j].hasMine()){
+                grid[i][j].setFlagged(true);
+            }
+        }
+    }
+}
+
     public int getFlagCount(){
         int count=0;
         for(int i=0; i<rows; i++){
@@ -160,6 +170,7 @@ public class Board {
 
     public int getColumns() {return columns;}
 
+    
     public Cell getCell(int r, int c){
         return grid[r][c];
     }

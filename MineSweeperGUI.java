@@ -7,26 +7,49 @@ public class MineSweeperGUI extends Frame{
     private Button[][] buttons;
     private Label statusLabel;
     private Label minesLabel;
+    private Label timeLabel;
     private int rows;
     private int columns;
     private int mines;
+    private long startTime;
+    private volatile Thread timeThread;
     private boolean gameOver = false;
 
     public MineSweeperGUI(int rows, int columns, int mines){
-        this.rows = 9;
-        this.columns = 9;
-        this.mines =10;
+        this.rows = rows;
+        this.columns = columns;
+        this.mines =mines;
 
         board = new Board(rows, columns, mines);
         setTitle("Minesweeper");
         statusLabel = new Label("Good Luck.");
-        Panel topPanel = new Panel(new FlowLayout());
+        timeLabel = new Label("Time: 0    ");
         minesLabel = new Label("Mines: " + mines);
+
+        Panel topPanel = new Panel(new FlowLayout());
         Button newGameButton= new Button("New Game");
+        Choice difficulty = new Choice();
+        
+        difficulty.add("Easy");
+        difficulty.add("Medium");
+        difficulty.add("Hard");
+        
+        if(mines == 10){
+            difficulty.select("Easy");
+        }else if(mines ==40){
+            difficulty.select("Medium");
+        }else{
+            difficulty.select("Hard");
+        }
+
+        topPanel.add(difficulty);
+        topPanel.add(timeLabel);
         topPanel.add(minesLabel);
         topPanel.add(newGameButton);
         topPanel.add(statusLabel);
         add(topPanel, BorderLayout.NORTH);
+        
+
         Panel gridPanel = new Panel(new GridLayout(rows,columns));
         buttons = new Button[rows][columns];
 
@@ -48,11 +71,7 @@ public class MineSweeperGUI extends Frame{
 
         add(gridPanel,BorderLayout.CENTER);
 
-        newGameButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e){
-                newGame();
-            }
-        });
+        newGameButton.addActionListener(e ->newGame());
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e){
@@ -61,22 +80,35 @@ public class MineSweeperGUI extends Frame{
             }
         });
         
-        setSize(600,550);
+        difficulty.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                changeDifficulty(difficulty.getSelectedItem());
+            }
+        });
+
+        setSize(Math.max(columns*30+40, 450),rows*30+100);
         setVisible(true);
     }
 
     private void handleClick(int rows, int columns,boolean rightClick){
         if(gameOver){
             return;
-        }else if(rightClick){
+        }
+        if(!rightClick && timeThread == null){
+            startTimer();
+        }
+        if(rightClick){
             board.toggleFlag(rows, columns);
         }else if(board.reveal(rows, columns)){
             board.revealAllMines();
             statusLabel.setText("You Lost.");
             gameOver = true;
+            stopTimer();
         }else if(board.isWon()){
+            board.flagAllMines();
             statusLabel.setText("You Won!");
             gameOver = true;
+            stopTimer();
         }
         updateButtons();
     }
@@ -105,8 +137,10 @@ public class MineSweeperGUI extends Frame{
         }
         minesLabel.setText("Mines: "+ (board.getMineCount()-board.getFlagCount()));
     }
-    
+
     private void newGame(){
+        stopTimer();
+        timeLabel.setText("Time: 0");
         board = new Board(rows, columns, mines);
         gameOver = false;
         statusLabel.setText("Good Luck!");
@@ -118,4 +152,45 @@ public class MineSweeperGUI extends Frame{
         }
         updateButtons();
     }
+
+    private void startTimer(){
+        startTime = System.currentTimeMillis();
+        Thread t = new Thread(new Runnable() {
+            public void run(){
+                while (timeThread == Thread.currentThread()){
+                    final long secs = (System.currentTimeMillis() - startTime) / 1000;
+
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run(){
+                            timeLabel.setText("Time: "+secs);
+                        }
+                    });
+                    try{
+                        Thread.sleep(200);
+                    }catch(InterruptedException e){
+                        return;
+                    }
+                }
+            }
+        });
+        timeThread = t;
+        t.start();
+    }
+
+    private void stopTimer(){
+        timeThread = null;
+    }
+
+    private void changeDifficulty(String difficulty){
+        stopTimer();
+        dispose();
+        if(difficulty.equals("Easy")){
+            new MineSweeperGUI(9, 9, 10);
+        }else if(difficulty.equals("Medium")){
+            new MineSweeperGUI(16, 16, 40);
+        }else{
+            new MineSweeperGUI(30, 16, 99);
+        }
+    }
+
 }
