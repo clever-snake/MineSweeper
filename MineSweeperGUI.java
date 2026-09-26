@@ -60,7 +60,7 @@ public class MineSweeperGUI extends Frame{
                 final int row = i;
                 final int col = j;
                 buttons[i][j].addMouseListener(new MouseAdapter() {
-                    public void mousePressed(MouseEvent e) {
+                    public void mouseReleased(MouseEvent e) {
                         boolean rightClick = e.getButton() == MouseEvent.BUTTON3 || e.isControlDown();
                         handleClick(row, col, rightClick);
                     }
@@ -151,11 +151,6 @@ public class MineSweeperGUI extends Frame{
             }
         }
         updateButtons();
-        for(int i=0; i<rows; i++){
-            for(int j=0; j<columns; j++){
-                buttons[i][j].repaint();
-            }
-        }
     }
 
     private void startTimer(){
