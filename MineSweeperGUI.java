@@ -1,13 +1,28 @@
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
 
-public class MineSweeperGUI extends Frame{
+public class MineSweeperGUI extends JFrame {
+
+    private static final Color[] NUMBER_COLORS = {
+        null,
+        new Color(0, 0, 255),     
+        new Color(0, 128, 0),     
+        new Color(255, 0, 0),      
+        new Color(0, 0, 128),     
+        new Color(128, 0, 0),      
+        new Color(0, 128, 128),
+        Color.BLACK,
+        Color.GRAY
+    };
+    private static final Color REVEALED_COLOR = new Color(220, 220, 220);
+    private static final int CELL_SIZE = 30;
 
     private Board board;
-    private Button[][] buttons;
-    private Label statusLabel;
-    private Label minesLabel;
-    private Label timeLabel;
+    private JButton[][] buttons;
+    private JLabel statusLabel;
+    private JLabel minesLabel;
+    private JLabel timeLabel;
     private int rows;
     private int columns;
     private int mines;
@@ -15,31 +30,36 @@ public class MineSweeperGUI extends Frame{
     private volatile Thread timeThread;
     private boolean gameOver = false;
 
+   
+    private javax.swing.border.Border defaultBorder;
+    private Color defaultBackground;
+
     public MineSweeperGUI(int rows, int columns, int mines){
         this.rows = rows;
         this.columns = columns;
-        this.mines =mines;
+        this.mines = mines;
 
         board = new Board(rows, columns, mines);
         setTitle("Minesweeper");
-        statusLabel = new Label("Good Luck.");
-        timeLabel = new Label("Time: 0    ");
-        minesLabel = new Label("Mines: " + mines);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        Panel topPanel = new Panel(new FlowLayout());
-        Button newGameButton= new Button("New Game");
-        Choice difficulty = new Choice();
-        
-        difficulty.add("Easy");
-        difficulty.add("Medium");
-        difficulty.add("Hard");
-        
+        statusLabel = new JLabel("Good Luck.");
+        timeLabel = new JLabel("Time: 0");
+        minesLabel = new JLabel("Mines: " + mines);
+
+        JPanel topPanel = new JPanel(new FlowLayout());
+        JButton newGameButton = new JButton("New Game");
+        newGameButton.setFocusable(false);
+
+        JComboBox<String> difficulty = new JComboBox<>(new String[]{"Easy", "Medium", "Hard"});
+        difficulty.setFocusable(false);
+
         if(mines == 10){
-            difficulty.select("Easy");
-        }else if(mines ==40){
-            difficulty.select("Medium");
+            difficulty.setSelectedItem("Easy");
+        }else if(mines == 40){
+            difficulty.setSelectedItem("Medium");
         }else{
-            difficulty.select("Hard");
+            difficulty.setSelectedItem("Hard");
         }
 
         topPanel.add(difficulty);
@@ -48,61 +68,63 @@ public class MineSweeperGUI extends Frame{
         topPanel.add(newGameButton);
         topPanel.add(statusLabel);
         add(topPanel, BorderLayout.NORTH);
-        
 
-        Panel gridPanel = new Panel(new GridLayout(rows,columns));
-        buttons = new Button[rows][columns];
+        JPanel gridPanel = new JPanel(new GridLayout(rows, columns));
+        buttons = new JButton[rows][columns];
 
         for(int i=0; i<rows; i++){
             for(int j=0; j<columns; j++){
-                buttons[i][j] = new Button("");
-                gridPanel.add(buttons[i][j]);
+                JButton b = new JButton("");
+                b.setFocusable(false);
+                b.setMargin(new Insets(0, 0, 0, 0)); 
+                b.setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
+                b.setFont(new Font("SansSerif", Font.BOLD, 14));
+                buttons[i][j] = b;
+                gridPanel.add(b);
+
                 final int row = i;
                 final int col = j;
-                buttons[i][j].addMouseListener(new MouseAdapter() {
+                b.addMouseListener(new MouseAdapter() {
                     public void mouseReleased(MouseEvent e) {
-                        boolean rightClick = e.getButton() == MouseEvent.BUTTON3 || e.isControlDown();
+                        boolean rightClick = SwingUtilities.isRightMouseButton(e) || e.isControlDown();
                         handleClick(row, col, rightClick);
                     }
                 });
             }
         }
+        defaultBorder = buttons[0][0].getBorder();
+        defaultBackground = buttons[0][0].getBackground();
+
         
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.add(gridPanel);
+        add(centerPanel, BorderLayout.CENTER);
 
-        add(gridPanel,BorderLayout.CENTER);
+        newGameButton.addActionListener(e -> newGame());
 
-        newGameButton.addActionListener(e ->newGame());
+        difficulty.addActionListener(e -> changeDifficulty((String) difficulty.getSelectedItem()));
 
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e){
-                dispose();
-                System.exit(0);
-            }
-        });
-        
-        difficulty.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-                changeDifficulty(difficulty.getSelectedItem());
-            }
-        });
-
-        setSize(Math.max(columns*30+40, 450),rows*30+100);
+        pack();                     
+        setResizable(false);
+        setLocationRelativeTo(null); 
         setVisible(true);
     }
 
-    private void handleClick(int rows, int columns,boolean rightClick){
+    private void handleClick(int r, int c, boolean rightClick){
         if(gameOver){
             return;
         }
         if(!rightClick && timeThread == null){
             startTimer();
         }
+        boolean lost = false;
         if(rightClick){
-            board.toggleFlag(rows, columns);
-        }else if(board.reveal(rows, columns)){
+            board.toggleFlag(r, c);
+        }else if(board.reveal(r, c)){
             board.revealAllMines();
             statusLabel.setText("You Lost.");
             gameOver = true;
+            lost = true;
             stopTimer();
         }else if(board.isWon()){
             board.flagAllMines();
@@ -111,31 +133,51 @@ public class MineSweeperGUI extends Frame{
             stopTimer();
         }
         updateButtons();
+        if(lost){
+            buttons[r][c].setBackground(Color.RED);  
+        }
     }
 
     private void updateButtons(){
         for(int i=0; i<board.getRows(); i++){
             for(int j=0; j<board.getColumns(); j++){
                 Cell cell = board.getCell(i, j);
-                Button b = buttons[i][j];
+                JButton b = buttons[i][j];
 
                 if(cell.isFlagged()){
-                    b.setLabel("F");
+                    showClosed(b);
+                    b.setText("F");
+                    b.setForeground(Color.RED);
                 }else if(!cell.isReavealed()){
-                    b.setLabel("");
+                    showClosed(b);
+                    b.setText("");
                 }else if(cell.hasMine()){
-                    b.setLabel("*");
-                    b.setEnabled(false);
+                    showOpen(b);
+                    b.setText("*");
+                    b.setForeground(Color.BLACK);
                 }else if(cell.getAdjacentMines() == 0){
-                    b.setLabel(".");
-                    b.setEnabled(false);
+                    showOpen(b);
+                    b.setText("");
                 }else{
-                    b.setLabel(String.valueOf(cell.getAdjacentMines()));
-                    b.setEnabled(false);
+                    showOpen(b);
+                    int n = cell.getAdjacentMines();
+                    b.setText(String.valueOf(n));
+                    b.setForeground(NUMBER_COLORS[n]);
                 }
             }
         }
-        minesLabel.setText("Mines: "+ (board.getMineCount()-board.getFlagCount()));
+        minesLabel.setText("Mines: " + (board.getMineCount() - board.getFlagCount()));
+    }
+
+    // Κλειστό κελί: κανονικό "ανάγλυφο" κουμπί
+    private void showClosed(JButton b){
+        b.setBorder(defaultBorder);
+        b.setBackground(defaultBackground);
+    }
+
+    private void showOpen(JButton b){
+        b.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        b.setBackground(REVEALED_COLOR);
     }
 
     private void newGame(){
@@ -144,12 +186,6 @@ public class MineSweeperGUI extends Frame{
         board = new Board(rows, columns, mines);
         gameOver = false;
         statusLabel.setText("Good Luck!");
-        for(int i=0; i<rows; i++){
-            for(int j=0; j<columns; j++){
-                buttons[i][j].setLabel("");
-                buttons[i][j].setEnabled(true);
-            }
-        }
         updateButtons();
     }
 
@@ -160,9 +196,9 @@ public class MineSweeperGUI extends Frame{
                 while (timeThread == Thread.currentThread()){
                     final long secs = (System.currentTimeMillis() - startTime) / 1000;
 
-                    EventQueue.invokeLater(new Runnable() {
+                    SwingUtilities.invokeLater(new Runnable() {
                         public void run(){
-                            timeLabel.setText("Time: "+secs);
+                            timeLabel.setText("Time: " + secs);
                         }
                     });
                     try{

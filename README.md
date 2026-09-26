@@ -1,6 +1,6 @@
 # Minesweeper in Java
 
-A classic Minesweeper game built from scratch in Java, with a graphical interface using AWT.
+A classic Minesweeper game built from scratch in Java, with a graphical interface using Swing.
 
 ![Gameplay](screenshots/gameplay.png)
 
@@ -12,7 +12,8 @@ A classic Minesweeper game built from scratch in Java, with a graphical interfac
 - **Flags** and a **mine counter** (mines minus placed flags)
 - **Timer** that starts on the first click, running on a separate thread
 - **New Game** button and difficulty selector
-- All mines are revealed when you lose, and automatically flagged when you win
+- All mines are revealed when you lose (the mine you clicked is shown in red), and automatically flagged when you win
+- Classic colored numbers and the same look on macOS, Windows and Linux
 - A **terminal version** of the game (`ConsoleGame`) that uses the same game logic
 
 ## How to Play
@@ -54,7 +55,7 @@ Commands have the form `o row column` to open a cell and `F row column` to flag 
 |---|---|
 | `Cell.java` | State of a single cell: mine, revealed, flagged, number of adjacent mines |
 | `Board.java` | Game logic: mine placement, adjacent mine counts, flood fill, win/loss checks |
-| `MineSweeperGUI.java` | Graphical interface (AWT): buttons grid, mouse input, timer, difficulty levels |
+| `MineSweeperGUI.java` | Graphical interface (Swing): buttons grid, mouse input, timer, difficulty levels |
 | `ConsoleGame.java` | Text-based version for the terminal |
 | `Main.java` | Entry point for the graphical version |
 
@@ -64,6 +65,7 @@ The game logic (`Board`) is completely independent of the interface. The same cl
 
 - Object-oriented design and separating game logic from presentation
 - Recursion, through the flood fill algorithm
-- Event-driven GUI programming with AWT (mouse, action and item listeners)
-- Multithreading: running the timer on its own thread and updating the GUI safely with `EventQueue.invokeLater`
+- Event-driven GUI programming, first with AWT and then with Swing (mouse and action listeners)
+- Cross-platform testing: native AWT buttons looked and behaved differently on Windows, so the interface was moved to Swing for a consistent result
+- Multithreading: running the timer on its own thread and updating the GUI safely with `SwingUtilities.invokeLater`
 - Version control with Git and GitHub
