@@ -44,8 +44,8 @@ public class Board {
 
     private void placeMines(int safeR, int safeC){
         int placed = 0;
+        Random rand = new Random();
         while(placed<mineCount){
-            Random rand = new Random();
             int rrow = rand.nextInt(rows);
             int rcolumn = rand.nextInt(columns);
             if (Math.abs(rrow - safeR) <= 1 && Math.abs(rcolumn - safeC) <= 1) continue;
@@ -170,7 +170,8 @@ public class Board {
 
     public int getColumns() {return columns;}
 
-    
+
+        
     public Cell getCell(int r, int c){
         return grid[r][c];
     }

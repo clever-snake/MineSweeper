@@ -12,7 +12,6 @@ public class ConsoleGame {
             board.printBoard();
             System.out.print("o/f row column");
             String cmd = in.next();
-            System.out.println("Διάβασα: [" + cmd + "] μήκος " + cmd.length());
             int r = in.nextInt();
             int c = in.nextInt();
             if(cmd.equals("o")){

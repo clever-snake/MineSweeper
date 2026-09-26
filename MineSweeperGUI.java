@@ -189,7 +189,7 @@ public class MineSweeperGUI extends Frame{
         }else if(difficulty.equals("Medium")){
             new MineSweeperGUI(16, 16, 40);
         }else{
-            new MineSweeperGUI(30, 16, 99);
+            new MineSweeperGUI(16, 30, 99);
         }
     }
 
