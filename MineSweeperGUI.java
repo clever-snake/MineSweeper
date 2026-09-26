@@ -151,6 +151,11 @@ public class MineSweeperGUI extends Frame{
             }
         }
         updateButtons();
+        for(int i=0; i<rows; i++){
+            for(int j=0; j<columns; j++){
+                buttons[i][j].repaint();
+            }
+        }
     }
 
     private void startTimer(){
